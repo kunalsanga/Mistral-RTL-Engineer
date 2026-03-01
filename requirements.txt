@@ -1,0 +1,13 @@
+torch>=2.1.0
+transformers>=5.0.0
+peft>=0.8.0
+trl>=0.8.0
+bitsandbytes>=0.41.3
+datasets>=2.16.0
+accelerate>=0.26.0
+wandb>=0.16.0
+gradio>=4.15.0
+sentencepiece>=0.1.99
+protobuf>=3.20.0
+scipy>=1.11.0
+einops>=0.7.0
