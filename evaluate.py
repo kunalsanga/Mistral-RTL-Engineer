@@ -6,6 +6,7 @@ Logs results to W&B and saves comparison to evaluation_results.md
 
 import os
 import gc
+import json
 import torch
 import wandb
 from transformers import AutoModelForCausalLM, AutoTokenizer
@@ -20,56 +21,7 @@ OUTPUT_FILE      = "evaluation_results.md"
 MAX_NEW_TOKENS   = 300
 TEMPERATURE      = 0.3
 WANDB_PROJECT    = "mistral-rtl-engineer"
-
-# ─────────────────────────────────────────────
-# BENCHMARK PROMPTS
-# ─────────────────────────────────────────────
-BENCHMARK_PROMPTS = [
-    {
-        "id": "bug_detection",
-        "instruction": (
-            "What is wrong with this Verilog code?\n"
-            "module latch(input clk, input d, output reg q);\n"
-            "  always @(clk) q = d;\nendmodule"
-        ),
-    },
-    {
-        "id": "testbench_gen",
-        "instruction": (
-            "Generate a testbench for this Verilog module:\n"
-            "module mux2to1(input a, input b, input sel, output y);\n"
-            "  assign y = sel ? b : a;\nendmodule"
-        ),
-    },
-    {
-        "id": "explain_module",
-        "instruction": (
-            "Explain what this Verilog module does:\n"
-            "module gray_to_bin(input [3:0] gray, output reg [3:0] bin);\n"
-            "  integer i;\n"
-            "  always @(*) begin\n"
-            "    bin[3] = gray[3];\n"
-            "    for (i = 2; i >= 0; i = i-1)\n"
-            "      bin[i] = bin[i+1] ^ gray[i];\n"
-            "  end\nendmodule"
-        ),
-    },
-    {
-        "id": "timing_question",
-        "instruction": (
-            "What timing considerations are important for a 200MHz FPGA design "
-            "using a ripple-carry adder?"
-        ),
-    },
-    {
-        "id": "optimization",
-        "instruction": (
-            "How can I optimize this Verilog multiplier for speed?\n"
-            "module mult(input [7:0] a, b, output [15:0] p);\n"
-            "  assign p = a * b;\nendmodule"
-        ),
-    },
-]
+BENCHMARK_FILE   = "data/eval_benchmark.json"
 
 PROMPT_TEMPLATE = "### Instruction:\n{instruction}\n\n### Response:\n"
 
@@ -132,11 +84,14 @@ def run_evaluation():
 
     results = []
 
+    with open(BENCHMARK_FILE, "r") as f:
+        prompts = json.load(f)
+
     # --- BASE MODEL ---
     print("\n[PHASE 1] Running base model evaluation ...")
     base_model, tokenizer = load_model(adapter_path=None)
 
-    for prompt in BENCHMARK_PROMPTS:
+    for prompt in prompts:
         print(f"  Prompt: {prompt['id']}")
         base_output = generate(base_model, tokenizer, prompt["instruction"])
         results.append({
@@ -156,7 +111,7 @@ def run_evaluation():
     print("\n[PHASE 2] Running fine-tuned model evaluation ...")
     ft_model, tokenizer = load_model(adapter_path=ADAPTER_PATH)
 
-    for i, prompt in enumerate(BENCHMARK_PROMPTS):
+    for i, prompt in enumerate(prompts):
         print(f"  Prompt: {prompt['id']}")
         ft_output = generate(ft_model, tokenizer, prompt["instruction"])
         results[i]["ft_output"] = ft_output
@@ -176,6 +131,15 @@ def write_markdown_report(results: list):
     lines = [
         "# Mistral RTL Engineer — Evaluation Report\n",
         "**Comparison: Base Mistral-7B vs Fine-Tuned (QLoRA RTL)**\n",
+        "---\n\n",
+        "## Scoring Rubric\n",
+        "| Dimension | Weight | 0 (Fail) | 1 (Partial) | 2 (Good) | 3 (Excellent) |\n",
+        "|---|---|---|---|---|---|\n",
+        "| **Bug Detection** | 30% | Misses bug | Symptoms only | Root cause | Root cause + fix + why |\n",
+        "| **Timing Math** | 20% | Wrong numbers | Right logic, wrong math | Correct | Correct + optimization |\n",
+        "| **Testbench** | 20% | Missing/bad | Stimulus only | Valid TB | Self-checking assert TB |\n",
+        "| **Correctness** | 15% | Syntax errors | Compiles, wrong | Correct | Correct + synthesizable |\n",
+        "| **Explanation** | 15% | Vague | Basic keywords | Structured | 3-section format used |\n\n",
         "---\n",
     ]
     for r in results:

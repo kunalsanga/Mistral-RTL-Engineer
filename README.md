@@ -41,7 +41,8 @@
 |---|---|
 | **Base model** | `unsloth/mistral-7b-v0.3-bnb-4bit` (Mistral-7B, 4-bit NF4) |
 | **Trainable parameters** | 20,971,520 / 7,268,995,072 (0.29%) |
-| **Training samples** | 9 (train) + 1 (eval) |
+| **Training samples** | 192 highly-curated RTL samples |
+| **Eval Prompts** | 20 RTL Benchmarks (eval_benchmark.json) |
 | **Training time** | **54.66 seconds** |
 | **Final train loss** | **1.066** |
 | **Best epoch loss** | **0.632** (epoch 2) |
@@ -104,7 +105,7 @@ unsloth/mistral-7b-v0.3-bnb-4bit (base)
 ```
 Mistral RTL Engineer/
 ├── data/
-│   └── train.json            # 10 RTL instruction-tuning Q&A pairs
+│   └── train.json            # 192 RTL instruction-tuning Q&A pairs
 ├── outputs/
 │   └── mistral-rtl/          # LoRA adapter weights (post-training)
 ├── wandb/                    # Local W&B run logs

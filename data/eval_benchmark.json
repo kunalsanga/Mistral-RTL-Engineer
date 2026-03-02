@@ -1,0 +1,102 @@
+[
+    {
+        "instruction": "Debug this shift register implementation. Why does the synthesizer collapse it into a single flip-flop?\\nmodule delay_pipe(input clk, input d, output reg q0, output reg q1, output reg q2);\\n  always @(posedge clk) begin\\n    q0 = d;\\n    q1 = q0;\\n    q2 = q1;\\n  end\\nendmodule",
+        "input": "",
+        "expected_output": "Blocking vs non-blocking mismatch causing pipeline collapse."
+    },
+    {
+        "instruction": "Explain why this missing sensitivity list component fail verification randomly but synthesize flawlessly into silicon?\\nmodule mux_broken(input a, input b, input sel, output reg out);\\n  always @(a or sel) begin\\n    if (sel) out = a;\\n    else out = b;\\n  end\\nendmodule",
+        "input": "",
+        "expected_output": "Synthesis infers combinational logic correctly ignoring missing 'b', but simulation caches 'b' forming latches."
+    },
+    {
+        "instruction": "Debug this clock multiplexer. Why does this simple logic create fatal runtime Phase glitches?\\nmodule naive_clk_mux(input clk1, input clk2, input sel, output out_clk);\\n  assign out_clk = sel ? clk1 : clk2;\\nendmodule",
+        "input": "",
+        "expected_output": "Clock networks require dedicated BUFGMUX glitchless multiplexers rather than generic fabric logic."
+    },
+    {
+        "instruction": "Analyze this code for latch inference.\\nmodule decoder_NBIT(input [3:0] sel, output reg [15:0] dec);\\n  always @(*) begin\\n    if (sel == 0) dec = 1;\\n    else if (sel == 1) dec = 2;\\n  end\\nendmodule",
+        "input": "",
+        "expected_output": "Combinational block misses default assignments. A transparent latch might be inferred."
+    },
+    {
+        "instruction": "How do I safely cross a 32-bit bus from a 100MHz clock domain to a 250MHz clock domain?",
+        "input": "",
+        "expected_output": "Must use an Asynchronous FIFO with Gray-coders for safe multi-bit asynchronous transmission."
+    },
+    {
+        "instruction": "Debug the following FSM module. What is structurally inefficient about synthesizing state next definitions?\\nalways @(posedge clk) begin\\n  state <= next_state;\\nend\\nalways @(state, in_valid) begin\\n  case(state)...",
+        "input": "",
+        "expected_output": "Ensure a default case exists to prevent inferred latches in combinational state logic."
+    },
+    {
+        "instruction": "What is the difference between a Mealy and a Moore State Machine in RTL?",
+        "input": "",
+        "expected_output": "Moore output depends only on state; Mealy output depends on state and active inputs."
+    },
+    {
+        "instruction": "Debug this logical structural case statement completely natively assigning completely un-synthesizable purely logic parameters.\\nmodule inverted_case(input [1:0] cur, output reg flag);\\n  always @(*) begin\\n    case(2'b11)\\n      cur + 1 : flag = 1;\\n      cur - 1 : flag = 0;\\n      default: flag  = 1;\\n    endcase\\n  end\\nendmodule",
+        "input": "",
+        "expected_output": "Case conditions contain non-constants inverted. Verilog standard prohibits this logic dynamically."
+    },
+    {
+        "instruction": "Explain why mapping physical BRAM matrices organically without mathematically synchronous write ports causes errors.\\nmodule no_write_ram(input clk, input [15:0] addr, output reg [31:0] q);\\n  logic [31:0] mem [0:1023];\\n  always @(posedge clk) q <= mem[addr];\\nendmodule",
+        "input": "",
+        "expected_output": "Read-only memories synthesized natively typically pull initialization logic (ROMs) or require write ports to properly map as actual Dual-Port RAMs."
+    },
+    {
+        "instruction": "Explain why Verification randomization utilizing `$random` completely disrupts topological reproducibility in SystemVerilog constraints.",
+        "input": "",
+        "expected_output": "$random is legacy and shares global simulator seeds; $urandom must be used for modular OOP."
+    },
+    {
+        "instruction": "Identify the unhandled exception state generated inherently when `assign` continuous wire logic attempts to map explicitly to variables inside a sequential `always` block.\\module mix_assign(input clk, output reg q_out);\\n  wire internal_q;\\n  assign internal_q = ~internal_q;\\n  always @(posedge clk) q_out <= internal_q;\\nendmodule",
+        "input": "",
+        "expected_output": "A ring oscillator via assign creates a combinational loop that crashes Physical Synthesis limits."
+    },
+    {
+        "instruction": "Debug execution trace string truncation output format. Why does `%b` dynamically output varying widths specifically?\\ninitial begin\\n  logic [7:0] val = 8'b0000_1010;\\n  $display(\\\"Binary: %b\\\", val);\\nend",
+        "input": "",
+        "expected_output": "%b dynamically trims leading zeros, use %08b for zero-padding explicit widths."
+    },
+    {
+        "instruction": "What happens when an AXI-Stream `TREADY` is dropped unilaterally while `TVALID` is high?",
+        "input": "",
+        "expected_output": "Protocol violation. Once TVALID goes high, it must stay locked until TREADY is asserted."
+    },
+    {
+        "instruction": "Why does using Verilog implicit wire width syntax explicitly drop critical module port bits from the data stream?",
+        "input": "",
+        "expected_output": "Implicit wires default geometrically to 1-bit, truncating dynamic parameters silently."
+    },
+    {
+        "instruction": "Debug the implicit memory array initialization divergence caused fundamentally by `initial` mathematical assignment scopes explicitly in ASIC logic.",
+        "input": "",
+        "expected_output": "Initial blocks are ignored in physical ASICs unlike FPGAs. You must implement robust external reset paths."
+    },
+    {
+        "instruction": "Debug this unaligned SVA `$stable` checker. Why does it produce hundreds of false-positive failures during simulation?",
+        "input": "",
+        "expected_output": "$stable across varying clock domains dynamically misses edge crossovers."
+    },
+    {
+        "instruction": "Identify the SystemVerilog SVA vulnerability generated by the Zero-Repetition operator `[*0]`.",
+        "input": "",
+        "expected_output": "[*0] matches empty matrices simultaneously producing verification false passes logically."
+    },
+    {
+        "instruction": "Why does synthesizing this BRAM instantiation generate an un-routable asymmetrical collision error in Vivado?",
+        "input": "",
+        "expected_output": "Physical BRAM blocks fundamentally can't map multiple concurrent dynamic read pointers natively onto a single port."
+    },
+    {
+        "instruction": "Identify the unhandled implicit latch logic resulting in a \\\"Combinational Loop\\\" synthesis warning.",
+        "input": "",
+        "expected_output": "A missing 'else' path forces STA engines to map combinatorial feedbacks inherently tracking the previous loop state."
+    },
+    {
+        "instruction": "What is Clock-Tree Metastability and how do synchronizers prevent it?",
+        "input": "",
+        "expected_output": "When a signal flips too close to the active edge, the D-FF captures a mid-voltage logic value, ringing wildly. Dual flip-flop sequences allow the vibration exactly one cycle to settle logically."
+    }
+]

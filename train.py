@@ -15,6 +15,7 @@ from transformers import (
     AutoTokenizer,
     BitsAndBytesConfig,
     TrainingArguments,
+    EarlyStoppingCallback,
 )
 from peft import LoraConfig, get_peft_model, TaskType, prepare_model_for_kbit_training
 from trl import SFTTrainer, SFTConfig
@@ -26,15 +27,15 @@ from typing import Dict
 # Pre-quantized 4-bit Mistral — only ~4GB download vs 14.5GB for raw weights
 # Functionally identical to mistralai/Mistral-7B-v0.1 with NF4 quantization
 MODEL_NAME      = "unsloth/mistral-7b-v0.3-bnb-4bit"
-DATA_PATH       = "data/train.json"
+DATA_PATH       = "data/rtl_dataset_expanded.json"
 OUTPUT_DIR      = "outputs/mistral-rtl"
-MAX_SEQ_LEN     = 512
+MAX_SEQ_LEN     = 768
 BATCH_SIZE      = 1
-GRAD_ACCUM      = 8       # Effective batch = 8
-LR              = 2e-4
-EPOCHS          = 3
-LORA_RANK       = 8
-LORA_ALPHA      = 16
+GRAD_ACCUM      = 16      # Effective batch = 16
+LR              = 1e-4
+EPOCHS          = 5
+LORA_RANK       = 16
+LORA_ALPHA      = 32
 LORA_DROPOUT    = 0.05
 WANDB_PROJECT   = "mistral-rtl-engineer"
 WANDB_API_KEY   = os.environ.get("WANDB_API_KEY", None)  # Set this env var as alternative to wandb login
@@ -194,8 +195,9 @@ training_args = SFTConfig(
     save_steps=9,
     save_total_limit=2,
     load_best_model_at_end=True,
+    metric_for_best_model="eval_loss",
     report_to="wandb",
-    run_name="qlora-rtl-run-01",
+    run_name="qlora-rtl-run-02",
     dataloader_pin_memory=False,            # Saves RAM on 16GB systems
     tf32=False,                             # Not available on RTX 4050
     seed=SEED,
@@ -223,6 +225,7 @@ trainer = SFTTrainer(
     train_dataset=train_ds,
     eval_dataset=eval_ds,
     processing_class=tokenizer,
+    callbacks=[EarlyStoppingCallback(early_stopping_patience=3)]
 )
 
 # ─────────────────────────────────────────────
